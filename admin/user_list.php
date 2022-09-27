@@ -1,26 +1,32 @@
-<?php 
-// error_reporting(0);
+<?php
+
 session_start();
-error_reporting(0);
+// error_reporting(0);
 require "../config/config.php";
 require "../config/common.php";
+
+
+
 
 if(empty($_SESSION['id']) && empty($_SESSION['logged_in'])){
   header('location:login.php');
 }
 
 if($_SESSION['role'] != 1){
-    header('location:login.php');
+  header('location:login.php');
 }
 
 if (isset($_POST['search'])) {
-    setcookie('search',$_POST['search'], time() + (86400 * 30), "/");
-  }else{
-    if (empty($_GET['pageno'])) {
-      setcookie('search',$_POST['search'], time() - (86400 * 30), "/");
-    }
+  setcookie('search',$_POST['search'], time() + (86400 * 30), "/");
+}else{
+  if (empty($_GET['pageno'])) {
+    unset($_COOKIE['search']); 
+    setcookie('search', null, -1, '/'); 
   }
+}
 ?>
+
+
 
 <?php include "header.php" ?>
 
@@ -31,7 +37,7 @@ if (isset($_POST['search'])) {
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Blog Listings</h3>
+                        <h3 class="card-title">User Listings</h3>
                     </div>
 
                     <!-- php code for table -->
@@ -48,20 +54,20 @@ if (isset($_POST['search'])) {
                       
 
                       if(empty($_POST['search']) && empty($_COOKIE['search'])){
-                        $stmt = $pdo->prepare("SELECT * FROM posts ORDER BY id DESC");
+                        $stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC");
                         $stmt->execute();
                         $result = $stmt->fetchAll();
                         $total_pages = ceil(count($result)/$num_of_records);
-                        $stmt = $pdo->prepare("SELECT * FROM posts ORDER BY id DESC LIMIT $offset,$num_of_records");
+                        $stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC LIMIT $offset,$num_of_records");
                         $stmt->execute();
                         $result = $stmt->fetchAll();
                       }else{
-                        $search = $_POST['search'] ? $_POST['search'] : $_COOKIE['search']; 
-                        $stmt = $pdo->prepare("SELECT * FROM posts WHERE title LIKE '%$search%' OR content LIKE '%$search%' ORDER BY id DESC");
+                        $search = $_POST['search'] ? $_POST['search'] : $_COOKIE['search'];  
+                        $stmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%' ORDER BY id DESC");
                         $stmt->execute();
                         $result = $stmt->fetchAll();
                         $total_pages = ceil(count($result)/$num_of_records);
-                        $stmt = $pdo->prepare("SELECT * FROM posts WHERE title LIKE '%$search%' OR content LIKE '%$search%' ORDER BY id DESC LIMIT $offset,$num_of_records");
+                        $stmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%' ORDER BY id DESC LIMIT $offset,$num_of_records");
                         $stmt->execute();
                         $result = $stmt->fetchAll();
                       }
@@ -71,13 +77,14 @@ if (isset($_POST['search'])) {
 
                     <!-- /.card-header -->
                     <div class="card-body">
-                        <a href="add.php" class="btn btn-success mb-3">New Blog Post</a>
+                        <a href="user_add.php" class="btn btn-success mb-3">Create New User</a>
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
                                     <th style="width: 10px">#</th>
-                                    <th>Title</th>
-                                    <th>Content</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
                                     <th style="width: 40px">Actions</th>
                                 </tr>
                             </thead>
@@ -85,20 +92,29 @@ if (isset($_POST['search'])) {
                                 <?php 
                         if($result){
                           $i = 1;
-                        foreach($result as $post){
+                        foreach($result as $user){
                   ?>
                                 <tr>
                                     <td><?php echo $i ?></td>
-                                    <td><?php echo escape($post['title']) ?></td>
-                                    <td><?php echo escape(substr($post['content'],0,100)) ?></td>
+                                    <td><?php echo escape($user['name']) ?></td>
+                                    <td><?php echo escape($user['email'])  ?></td>
+                                    <td>
+                                      <?php 
+                                      if($user['role'] == 1){
+                                        echo 'admin';
+                                      }else{
+                                        echo 'user';
+                                      }
+                                      
+                                      ?>
                                     <td>
                                         <div class="btn-group">
                                             <div class="container">
-                                                <a href="edit.php?id=<?php echo $post['id'] ?>"
+                                                <a href="user_edit.php?id=<?php echo $user['id'] ?>"
                                                     class="btn btn-warning">Edit</a>
                                             </div>
                                             <div class="container">
-                                                <a href="delete.php?id=<?php echo $post['id'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure want to delete?')" >Delete</a>
+                                                <a href="user_delete.php?id=<?php echo $user['id'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure want to delete?')" >Delete</a>
                                             </div>
 
                                         </div>

@@ -1,12 +1,32 @@
 <?php 
 session_start();
 require "../config/config.php";
+require "../config/common.php";
 
 if(empty($_SESSION['id']) && empty($_SESSION['logged_in'])){
   header('location:login.php');
 }
 
-if(isset($_POST['submit'])){
+if($_SESSION['role'] != 1){
+  header('location:login.php');
+}
+
+
+if($_POST){
+  
+  if(empty($_POST['title']) || empty($_POST['content']) || empty($_FILES['image'])){
+    if(empty($_POST['title'])){
+      $titleError = "Title cannot be null";
+    }
+  
+    if(empty($_POST['content'])){
+      $contentError = "Content cannot be null";
+    }
+  
+    if(empty($_FILES['image'])){
+      $imageError = "Image cannot be null";
+    }
+  }else{
     $file = 'images/' . $_FILES['image']['name'];
     $imageType = pathinfo($file,PATHINFO_EXTENSION);
 
@@ -30,6 +50,10 @@ if(isset($_POST['submit'])){
         }
 
     }
+  }
+ 
+ 
+    
 }
 ?>
 
@@ -43,17 +67,18 @@ if(isset($_POST['submit'])){
             <div class="card">
               <div class="card-body">
                 <form action="add.php" method="POST" enctype="multipart/form-data">
+                <input name="_token" type="hidden" value="<?php echo $_SESSION['_token']; ?>">
                     <div class="form-group">
-                        <label for="">Title</label>
-                        <input type="text" name="title" class="form-control" required>
+                        <label for="">Title</label><p style="color:red"><?php echo empty($titleError) ? "" : $titleError;   ?></p>
+                        <input type="text" name="title" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label for="">Content</label>
-                        <textarea name="content" class="form-control" id="" cols="30" rows="10" required></textarea>
+                        <label for="">Content</label><p style="color:red"><?php echo empty($contentError) ? "" :$contentError ;   ?></p>
+                        <textarea name="content" class="form-control" id="" cols="30" rows="10" ></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="">Image</label>
-                        <input type="file" name="image" required>
+                        <label for="">Image</label><p style="color:red"><?php echo empty($imageError)  ? "" : $imageError;   ?></p>
+                        <input type="file" name="image">
                     </div>
                     <div class="form-group">
                         <button type="submit" class="mr-3 btn btn-success" name="submit">Submit</button>

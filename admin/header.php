@@ -27,7 +27,15 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
       </li>
       </ul>
-      <form class="form-inline ms-3" action="index.php" method="POST">
+      <?php 
+
+            $link = $_SERVER['PHP_SELF'];
+            $linkArray = explode('/',$link);
+            $userLink = end($linkArray);
+
+      ?>
+      <form class="form-inline ms-3" action="<?php echo $userLink == 'user_list.php'? 'user_list.php' : 'index.php';  ?>" method="POST">
+      <input name="_token" type="hidden" value="<?php echo $_SESSION['_token']; ?>">
         <div class="input-group input-group-sm" >
           <input class="form-control form-control-navbar" name="search" type="search" placeholder="Search" aria-label="Search">
           <div class="input-group-append">
@@ -48,7 +56,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="index3.html" class="brand-link">
+    <a href="#" class="brand-link">
       <img src="../dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Blog Panel</span>
     </a>
@@ -81,6 +89,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <p>
                 Blogs
                 <span class="right badge badge-danger">New</span>
+              </p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="user_list.php" class="nav-link">
+              <p>
+                User
               </p>
             </a>
           </li>

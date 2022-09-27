@@ -1,3 +1,60 @@
+<?php 
+session_start();
+require "config/config.php";
+require "config/common.php";
+
+
+if(empty($_SESSION['user_id']) && empty($_SESSION['logged_in'])){
+  header('location:login.php');
+  }  
+ 
+  
+  
+  
+$stmt = $pdo->prepare("SELECT * FROM posts WHERE id=" . $_GET['id']);
+$stmt->execute();
+$result = $stmt->fetchAll();
+
+$post_id = $_GET['id'];
+  if($_POST){
+    if(empty($_POST['comment'])){  
+        $cmtError = "Comment cannot be null";
+    }else{
+      $comment = $_POST['comment'];
+      $author_id = $_SESSION['user_id'];
+      $stmt = $pdo->prepare("INSERT INTO comments (content,author_id,post_id) VALUES (:content,:author_id,:post_id)");
+      $result = $stmt->execute([
+          ':content' => $comment,
+          ':author_id' => $author_id,
+          ':post_id' => $post_id
+      ]);
+      if($result){
+        header('location:blogdetail.php?id='. $post_id);
+      }
+    }
+  
+  }
+
+
+$cmstmt = $pdo->prepare("SELECT * FROM comments WHERE post_id=" . $post_id);
+$cmstmt->execute();
+$cmResult = $cmstmt->fetchAll();
+
+if($cmResult){
+  $urResult = [];
+  foreach($cmResult as $value){
+    $author_id = $value['author_id'];
+    $urstmt = $pdo->prepare("SELECT * FROM users WHERE id=" . $author_id);
+    $urstmt->execute();
+    $urResult[]  = $urstmt->fetchAll();
+  }
+
+}
+
+
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,58 +86,46 @@
             <div class="card card-widget">
               <div class="card-header">
               <div class="card-title" style="float:none;text-align:center">
-                    <h4>Blog Title</h4>
+                    <h4><?php echo escape($result[0]['title']) ?></h4>
                </div>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
-                <img class="img-fluid pad" src="dist/img/photo2.png" alt="Photo">
+                <img class="img-fluid card-img" src="admin/images/<?php echo $result[0]['image'] ?>" alt="Photo">
 
-                <p>I took this photo this morning. What do you guys think?</p>
-                <button type="button" class="btn btn-default btn-sm"><i class="fas fa-share"></i> Share</button>
-                <button type="button" class="btn btn-default btn-sm"><i class="far fa-thumbs-up"></i> Like</button>
-                <span class="float-right text-muted">127 likes - 3 comments</span>
+                <p><?php echo escape($result[0]['content']) ?></p>
+                <h3>Comments</h3>
+                <a href="index.php" class="btn btn-warning">Back</a>
               </div>
               <!-- /.card-body -->
               <div class="card-footer card-comments">
                 <div class="card-comment">
-                  <!-- User image -->
-                  <img class="img-circle img-sm" src="dist/img/user3-128x128.jpg" alt="User Image">
-
-                  <div class="comment-text">
-                    <span class="username">
-                      Maria Gonzales
-                      <span class="text-muted float-right">8:03 PM Today</span>
+                  <?php if($cmResult){ ?>
+                  <div class="comment-text" style="margin-left: 0px;">
+                    <?php foreach($cmResult as $key=>$value){
+                      ?>
+                      <span class="username">
+                     <?php echo escape($urResult[$key][0]['name']) ?>
+                      <span class="text-muted float-right"><?php echo $value['created_at'] ?></span>
                     </span><!-- /.username -->
-                    It is a long established fact that a reader will distracted
-                    by the readable content of a page when looking at its layout.
+                    <?php echo escape($value['content']) ?>
+                      <?php } ?>
                   </div>
+                  <?php } ?>
                   <!-- /.comment-text -->
                 </div>
                 <!-- /.card-comment -->
-                <div class="card-comment">
-                  <!-- User image -->
-                  <img class="img-circle img-sm" src="dist/img/user4-128x128.jpg" alt="User Image">
 
-                  <div class="comment-text">
-                    <span class="username">
-                      Luna Stark
-                      <span class="text-muted float-right">8:03 PM Today</span>
-                    </span><!-- /.username -->
-                    It is a long established fact that a reader will distracted
-                    by the readable content of a page when looking at its layout.
-                  </div>
-                  <!-- /.comment-text -->
-                </div>
-                <!-- /.card-comment -->
               </div>
+                
               <!-- /.card-footer -->
               <div class="card-footer">
-                <form action="#" method="post">
-                  <img class="img-fluid img-circle img-sm" src="dist/img/user4-128x128.jpg" alt="Alt Text">
+                <form action="" method="POST">
+                <input name="_token" type="hidden" value="<?php echo $_SESSION['_token']; ?>">
                   <!-- .img-push is used to add margin to elements next to floating images -->
                   <div class="img-push">
-                    <input type="text" class="form-control form-control-sm" placeholder="Press enter to post comment">
+                  <p style="color:red"><?php echo empty($cmtError)  ? "" : $cmtError;   ?></p>
+                    <input type="text" name="comment" class="form-control form-control-sm" placeholder="Press enter to post comment">
                   </div>
                 </form>
               </div>
